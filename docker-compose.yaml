@@ -1,0 +1,58 @@
+version: '2'
+services:
+  cfme-app:
+    image: registry.access.redhat.com/cloudforms45/cfme-openshift-app
+    container_name: cfme-app 
+    privileged: true
+    environment:
+      APPLICATION_INIT_DELAY: 15
+      DATABASE_SERVICE_NAME: postgresql
+      DATABASE_REGION: 0
+      MEMCACHED_SERVICE_NAME: memcached
+      POSTGRESQL_USER: root
+      POSTGRESQL_PASSWORD: smartvm
+      POSTGRESQL_DATABASE: vmdb_production 
+      POSTGRESQL_MAX_CONNECTIONS: 100
+      POSTGRESQL_SHARED_BUFFERS: 256MB
+    ports:
+      - 10443:443
+    depends_on:
+      - memcached
+      - postgresql  
+    volumes:
+      - /Users/apple/cfme/cfme-server:/persistent
+      - /Users/apple/cfme/cfme-region:/persistent-region
+    networks:
+      - cfme-network1
+
+  memcached:
+    image: registry.access.redhat.com/cloudforms45/cfme-openshift-memcached
+    container_name: cfme-memcached 
+    environment:
+      MEMCACHED_MAX_MEMORY: 64
+      MEMCACHED_MAX_CONNECTIONS: 1024
+      MEMCACHED_SLAB_PAGE_SIZE: 1m
+    expose:
+      - 11211 
+    networks:
+      - cfme-network1
+
+  postgresql:
+    image: registry.access.redhat.com/cloudforms45/cfme-openshift-postgresql
+    container_name: cfme-postgresql
+    environment:
+      POSTGRESQL_USER: root
+      POSTGRESQL_PASSWORD: smartvm
+      POSTGRESQL_DATABASE: vmdb_production
+      POSTGRESQL_MAX_CONNECTIONS: 100
+      POSTGRESQL_SHARED_BUFFERS: 256MB
+    expose:
+      - 5432 
+    volumes:
+      - /Users/apple/cfme/pgsql-data:/var/lib/pgsql/data
+    networks:
+      - cfme-network1
+
+networks:
+  cfme-network1:
+    driver: bridge
